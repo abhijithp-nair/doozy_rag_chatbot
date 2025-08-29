@@ -1,0 +1,15 @@
+# Virtual environment
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Gradio runtime/cache
+.gradio/
+
+# FAISS index
+faiss_index.pkl
+
+#  local storage files
+storage/

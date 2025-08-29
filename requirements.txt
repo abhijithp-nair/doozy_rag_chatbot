@@ -1,0 +1,15 @@
+#  RAG Dependencies
+faiss-cpu==1.7.4
+sentence-transformers==2.2.2
+PyPDF2==3.0.1
+
+# Web Scraping
+beautifulsoup4==4.12.2
+requests==2.31.0
+playwright==1.39.0
+
+# Interface
+gradio==4.29.0
+
+# Utils
+pickle5==0.0.11
