@@ -1,108 +1,110 @@
-# Doozy — Local RAG Chatbot (PDF + Web Scraping)
+Doozy RAG Chatbot: 
 
-Doozy is a local Retrieval-Augmented Generation (RAG) chatbot that can chat over PDF documents and scraped webpages.
-It is designed for **local LLMs** served via **Ollama**, but you can easily swap to other local servers if you prefer.
+Doozy is a Retrieval-Augmented Generation (RAG) chatbot that allows you to interact with the contents of a PDF document and dynamically scraped websites.
+It is powered by FAISS for semantic search, SentenceTransformers for embeddings, and Gemma (via Ollama) as the local LLM backend.
 
-> The chatbot always introduces and refers to itself as **"Doozy"**.
+📂 Project Architecture
+doozy_rag_chatbot/
+│── run.py                 # Main entry point (CLI + Gradio UI)
+│── rag_core.py            # Core RAG logic (PDF loading, embeddings, web scraping, query answering)
+│── requirements.txt       # Dependencies
+│── data.pdf               # Input PDF (document to chat with)
+│── faiss_index.pkl        # Auto-created FAISS index (on first run)
+│── README.md              # Documentation
 
----
+Code Flow: 
 
-## ✨ Features
-- 🔎 Ingest one or more PDFs — automatically chunked & embedded locally.
-- 🌐 Scrape one or more URLs (BeautifulSoup) — merge with PDF knowledge base.
-- 🧠 Fast vector search with FAISS.
-- 🤖 Talk to a **local** LLM via **Ollama** (`/api/chat` & `/api/embeddings`).
-- 💬 CLI chat *or* simple Gradio UI (`--ui gradio`).
-- 💾 On-disk persistence in `./storage` so you can reuse the index later.
-- 🔐 No external APIs required.
+PDF Ingestion
 
----
+rag_core.py → load_pdfs() extracts text from data.pdf.
 
-## 🧱 Architecture
-```
-run.py                # Entry point (CLI or Gradio UI)
-rag_core.py           # RAG pipeline: chunking, embeddings, indexing, retrieval, generation
-loaders.py            # PDF loader and text cleaners
-web_scrape.py         # URL scraping (requests + BeautifulSoup)
-requirements.txt      # Python deps
-README.md             # This file
-storage/              # (auto) FAISS index + chunk metadata
-```
+Text is chunked into manageable pieces (chunk_text()).
 
----
+Indexing:
 
-## ✅ Requirements
-- Python 3.9+
-- [Ollama](https://ollama.com) running locally at `http://localhost:11434`  
-  Pull the models (or let Ollama pull them on first use):
-  ```bash
-  ollama pull llama3.1:8b-instruct
-  ollama pull nomic-embed-text
-  ```
+Each chunk is converted into embeddings using SentenceTransformer (all-MiniLM-L6-v2).
 
-> You can switch to other local models by changing CLI flags.
+A FAISS vector index is built (or loaded if already created).
 
----
+Query Handling:
 
-## 🚀 Quickstart
+When the user asks a question, the system retrieves the most relevant chunks from the PDF/web content.
 
-### 1) Install Python deps
-```bash
+Context is appended to the user query.
+
+LLM Response:
+
+The context-enriched query is sent to Ollama (Gemma model).
+
+The model generates the response as Doozy.
+
+Web Scraping Extension:
+
+Users can input a URL inside the chat.
+
+The system scrapes website text (BeautifulSoup/Playwright), chunks & embeds it, and extends the FAISS index dynamically.
+
+Doozy can now answer questions from both the PDF and scraped sites.
+
+
+ Setup Instructions:
+1. Clone the Repository
+git clone https://github.com/<your-username>/doozy_rag_chatbot.git
+cd doozy_rag_chatbot
+
+2. Create a Virtual Environment
+python -m venv .venv
+source .venv/bin/activate   # (Linux/Mac)
+.venv\Scripts\activate      # (Windows)
+
+3. Install Dependencies
 pip install -r requirements.txt
-```
 
-### 2) Start Ollama (if not already)
-```bash
+4. Install & Run Ollama
+
+Download Ollama from https://ollama.com/download
+
+Start Ollama service:
+
 ollama serve
-```
 
-### 3) Run with PDFs
-```bash
-python run.py --pdfs path/to/file1.pdf path/to/file2.pdf
-```
 
-### 4) Also scrape URLs
-```bash
-python run.py --pdfs path/to/file.pdf --urls https://example.com https://docs.example.org
-```
+Pull the Gemma model:
 
-### 5) Use the Gradio UI
-```bash
-python run.py --pdfs path/to/file.pdf --ui gradio
-```
+ollama pull gemma:2b
 
-### 6) Reuse existing index
-```bash
-python run.py --reuse-index
-```
+Running the Chatbot
+Option 1: Command Line Interface (CLI)
+python run.py
 
----
+Option 2: Gradio Web UI
+python run.py --ui
 
-## 🔧 Common Flags
-```bash
-python run.py   --pdfs path/to/a.pdf path/to/b.pdf   --urls https://example.com   --ollama-model llama3.1:8b-instruct   --embed-model nomic-embed-text   --chunk-size 800   --chunk-overlap 150   --k 5   --ui cli
-```
 
----
+Opens a browser window titled "Doozy Chatbot".
 
-## 🧪 Example Prompts
-- "Summarize the attached PDF."
-- "From the website, list the three most important recommendations."
-- "Compare the PDF section on security with this URL's security page."
+Chat directly with the document and scraped websites.
 
----
+ Web Scraping Feature
 
-## 🔒 Notes
-- This system is **local-first** and uses **no external cloud APIs**.
-- If your target site is JavaScript-heavy, you can extend `web_scrape.py` to Playwright easily.
-- The FAISS index and metadata are written to `./storage/` by default.
+Inside the chat, type:
 
----
+scrape https://example.com
 
-## 📦 Submission
-This repository already matches the requested structure:
-- `run.py` — primary entry point
-- `requirements.txt` — dependencies
-- Additional helper modules under the same root.
 
-Push to a public GitHub repo and you're done. Good luck! ✨
+The chatbot will scrape the site, add it to FAISS, and use both PDF + Web content for future answers.
+
+Deliverables
+
+1. run.py → Main entry point (UI + CLI).
+
+2. rag_core.py → RAG + scraping logic.
+
+3. requirements.txt → Dependencies.
+
+4. README.md → Documentation.
+
+5. data.pdf → Document to chat with.
+
+Note:
+The chatbot always introduces itself as Doozy and refers to itself consistently throughout conversations.
